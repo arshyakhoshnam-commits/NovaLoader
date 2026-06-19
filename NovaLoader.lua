@@ -1,12 +1,10 @@
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 pcall(function()
     CoreGui:FindFirstChild("NovaLoader"):Destroy()
 end)
 
--- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "NovaLoader"
 gui.Parent = CoreGui
@@ -14,27 +12,142 @@ gui.ResetOnSpawn = false
 
 -- MAIN
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 360, 0, 220)
-main.Position = UDim2.new(0.5, -180, 0.5, -110)
-main.BackgroundColor3 = Color3.fromRGB(10,10,20)
+main.Size = UDim2.new(0, 420, 0, 300)
+main.Position = UDim2.new(0.5, -210, 0.5, -150)
+main.BackgroundColor3 = Color3.fromRGB(10,10,18)
 main.Parent = gui
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
 
-local stroke = Instance.new("UIStroke", main)
-stroke.Color = Color3.fromRGB(0,170,255)
-stroke.Thickness = 2
+Instance.new("UIStroke", main).Color = Color3.fromRGB(0,170,255)
 
--- TOP BAR
-local top = Instance.new("Frame")
+-- TOP
+local top = Instance.new("TextLabel")
 top.Size = UDim2.new(1,0,0,30)
-top.BackgroundColor3 = Color3.fromRGB(15,15,30)
+top.BackgroundColor3 = Color3.fromRGB(15,15,25)
+top.Text = "Nova Script Loader"
+top.TextColor3 = Color3.fromRGB(0,200,255)
+top.Font = Enum.Font.GothamBold
+top.TextSize = 14
 top.Parent = main
-Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
 
--- TITLE
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,1,0)
-title.BackgroundTransparency = 1
+-- INPUT BOX (URL)
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0,280,0,30)
+box.Position = UDim2.new(0,10,0,40)
+box.PlaceholderText = "Paste Script URL here..."
+box.Text = ""
+box.BackgroundColor3 = Color3.fromRGB(20,20,35)
+box.TextColor3 = Color3.fromRGB(255,255,255)
+box.Parent = main
+Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
+
+-- ADD BUTTON
+local add = Instance.new("TextButton")
+add.Size = UDim2.new(0,100,0,30)
+add.Position = UDim2.new(0,300,0,40)
+add.Text = "Add"
+add.BackgroundColor3 = Color3.fromRGB(0,170,255)
+add.TextColor3 = Color3.fromRGB(0,0,0)
+add.Parent = main
+Instance.new("UICorner", add).CornerRadius = UDim.new(0,6)
+
+-- SCROLL LIST
+local list = Instance.new("ScrollingFrame")
+list.Size = UDim2.new(1,-20,1,-90)
+list.Position = UDim2.new(0,10,0,80)
+list.BackgroundTransparency = 1
+list.ScrollBarThickness = 4
+list.Parent = main
+
+local layout = Instance.new("UIListLayout", list)
+
+-- STORAGE
+local scripts = {}
+
+local function createItem(name, url)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1,0,0,40)
+    frame.BackgroundColor3 = Color3.fromRGB(20,20,30)
+    frame.Parent = list
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,6)
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.5,0,1,0)
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.BackgroundTransparency = 1
+    label.Parent = frame
+
+    -- EXECUTE
+    local exec = Instance.new("TextButton")
+    exec.Size = UDim2.new(0,60,0,25)
+    exec.Position = UDim2.new(0.55,0,0.2,0)
+    exec.Text = "Run"
+    exec.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    exec.Parent = frame
+    Instance.new("UICorner", exec).CornerRadius = UDim.new(0,6)
+
+    exec.MouseButton1Click:Connect(function()
+        pcall(function()
+            loadstring(game:HttpGet(url))()
+        end)
+    end)
+
+    -- DELETE
+    local del = Instance.new("TextButton")
+    del.Size = UDim2.new(0,60,0,25)
+    del.Position = UDim2.new(0.78,0,0.2,0)
+    del.Text = "Del"
+    del.BackgroundColor3 = Color3.fromRGB(255,80,80)
+    del.Parent = frame
+    Instance.new("UICorner", del).CornerRadius = UDim.new(0,6)
+
+    del.MouseButton1Click:Connect(function()
+        frame:Destroy()
+    end)
+end
+
+-- ADD SCRIPT LOGIC
+add.MouseButton1Click:Connect(function()
+    local url = box.Text
+    if url == "" then return end
+
+    local name = "Script "..tostring(#scripts+1)
+    table.insert(scripts, url)
+
+    createItem(name, url)
+
+    box.Text = ""
+end)
+
+-- DRAG (PC + MOBILE)
+local dragging, dragStart, startPos
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function()
+    dragging = false
+end)title.BackgroundTransparency = 1
 title.Text = "Nova Loader Hub"
 title.TextColor3 = Color3.fromRGB(0,200,255)
 title.Font = Enum.Font.GothamBold
