@@ -1,10 +1,9 @@
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 pcall(function()
-    local old = CoreGui:FindFirstChild("NovaLoader")
-    if old then old:Destroy() end
+    CoreGui:FindFirstChild("NovaLoader"):Destroy()
 end)
 
 -- GUI
@@ -13,28 +12,132 @@ gui.Name = "NovaLoader"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- Main
+-- MAIN FRAME
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, 340, 0, 200)
 main.Position = UDim2.new(0.5, -170, 0.5, -100)
-main.BackgroundColor3 = Color3.fromRGB(10,10,20)
+main.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
 main.BorderSizePixel = 0
-main.Active = true
 main.Parent = gui
 
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
 
--- Neon border
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0, 170, 255)
+local stroke = Instance.new("UIStroke", main)
 stroke.Thickness = 2
-stroke.Parent = main
+stroke.Color = Color3.fromRGB(0, 170, 255)
+stroke.Transparency = 0.25
 
--- Top bar
-local top = Instance.new("Frame")
-top.Size = UDim2.new(1,0,0,30)
-top.BackgroundColor3 = Color3.fromRGB(20,20,35)
-top.Parent = main
+-- 🔥 ANIMATION (POP IN)
+main.Size = UDim2.new(0, 0, 0, 0)
+TweenService:Create(
+    main,
+    TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {Size = UDim2.new(0, 340, 0, 200)}
+):Play()
+
+-- TITLE BAR (Drag Handle)
+local topbar = Instance.new("Frame")
+topbar.Size = UDim2.new(1, 0, 0, 30)
+topbar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+topbar.BorderSizePixel = 0
+topbar.Parent = main
+
+Instance.new("UICorner", topbar).CornerRadius = UDim.new(0, 14)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 1, 0)
+title.BackgroundTransparency = 1
+title.Text = "Nova Loader"
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.Parent = topbar
+
+-- 🖱️ DRAG SYSTEM (PC + MOBILE)
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+topbar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+topbar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+
+-- BUTTON SAMPLE
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0, 220, 0, 40)
+btn.Position = UDim2.new(0.5, -110, 0.5, -20)
+btn.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+btn.Text = "Execute"
+btn.TextColor3 = Color3.fromRGB(255,255,255)
+btn.Font = Enum.Font.Gotham
+btn.TextSize = 14
+btn.Parent = main
+
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
+local btnStroke = Instance.new("UIStroke", btn)
+btnStroke.Color = Color3.fromRGB(0, 170, 255)
+
+-- hover effect (PC)
+btn.MouseEnter:Connect(function()
+    TweenService:Create(btn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(30,30,50)
+    }):Play()
+end)
+
+btn.MouseLeave:Connect(function()
+    TweenService:Create(btn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(20,20,35)
+    }):Play()
+end)
+
+-- click effect
+btn.MouseButton1Down:Connect(function()
+    TweenService:Create(btn, TweenInfo.new(0.1), {
+        Size = UDim2.new(0, 210, 0, 38)
+    }):Play()
+end)
+
+btn.MouseButton1Up:Connect(function()
+    TweenService:Create(btn, TweenInfo.new(0.1), {
+        Size = UDim2.new(0, 220, 0, 40)
+    }):Play()
+end)top.Parent = main
 
 Instance.new("UICorner", top).CornerRadius = UDim.new(0, 12)
 
