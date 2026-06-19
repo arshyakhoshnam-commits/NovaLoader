@@ -12,29 +12,118 @@ gui.Name = "NovaLoader"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- MAIN FRAME
+-- MAIN
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 340, 0, 200)
-main.Position = UDim2.new(0.5, -170, 0.5, -100)
-main.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-main.BorderSizePixel = 0
+main.Size = UDim2.new(0, 360, 0, 220)
+main.Position = UDim2.new(0.5, -180, 0.5, -110)
+main.BackgroundColor3 = Color3.fromRGB(10,10,20)
 main.Parent = gui
-
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
 
 local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(0,170,255)
 stroke.Thickness = 2
-stroke.Color = Color3.fromRGB(0, 170, 255)
-stroke.Transparency = 0.25
 
--- 🔥 ANIMATION (POP IN)
-main.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(
-    main,
-    TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-    {Size = UDim2.new(0, 340, 0, 200)}
-):Play()
+-- TOP BAR
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1,0,0,30)
+top.BackgroundColor3 = Color3.fromRGB(15,15,30)
+top.Parent = main
+Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
 
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,1,0)
+title.BackgroundTransparency = 1
+title.Text = "Nova Loader Hub"
+title.TextColor3 = Color3.fromRGB(0,200,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.Parent = top
+
+-- ❌ EXIT BUTTON
+local exit = Instance.new("TextButton")
+exit.Size = UDim2.new(0,30,0,25)
+exit.Position = UDim2.new(1,-35,0,2)
+exit.Text = "X"
+exit.TextColor3 = Color3.fromRGB(255,80,80)
+exit.BackgroundColor3 = Color3.fromRGB(30,30,40)
+exit.Parent = top
+Instance.new("UICorner", exit).CornerRadius = UDim.new(0,6)
+
+exit.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- 🧠 SCRIPT HUB LIST
+local scripts = {
+    {"Infinite Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
+    {"Dex Explorer", "https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"}
+}
+
+local y = 40
+
+for _,v in pairs(scripts) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,320,0,35)
+    btn.Position = UDim2.new(0,20,0,y)
+    btn.Text = "▶ "..v[1]
+    btn.BackgroundColor3 = Color3.fromRGB(20,20,35)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Parent = main
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+    btn.MouseButton1Click:Connect(function()
+        pcall(function()
+            loadstring(game:HttpGet(v[2]))()
+        end)
+    end)
+
+    y = y + 45
+end
+
+-- 🗑 CLEAR / RESET BUTTON
+local clear = Instance.new("TextButton")
+clear.Size = UDim2.new(0,120,0,30)
+clear.Position = UDim2.new(0,20,1,-40)
+clear.Text = "Clear UI"
+clear.BackgroundColor3 = Color3.fromRGB(40,20,20)
+clear.TextColor3 = Color3.fromRGB(255,120,120)
+clear.Parent = main
+Instance.new("UICorner", clear).CornerRadius = UDim.new(0,6)
+
+clear.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- 📱 DRAG (PC + MOBILE)
+local dragging, dragStart, startPos
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function()
+    dragging = false
+end)
 -- TITLE BAR (Drag Handle)
 local topbar = Instance.new("Frame")
 topbar.Size = UDim2.new(1, 0, 0, 30)
